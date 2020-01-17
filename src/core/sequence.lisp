@@ -1584,8 +1584,7 @@ of which has elements that satisfy PRED, the second which do not."
 ;; This function allows remove-empty-subseqs to have a default value while still
 ;; using compiler macros and the apply sexp in split.
 (defun cl21-split-sequence (delimiter sequence &rest args &key start end from-end count (remove-empty-subseqs t res-supplied-p) test key)
-  (declare (ignorable start end from-end count remove-empty-subseqs test key)
-           (inline split-sequence:split-sequence))
+  (declare (ignorable start end from-end count remove-empty-subseqs test key))
   (when (not res-supplied-p)
     (setq args (list* :remove-empty-subseqs remove-empty-subseqs args)))
   (apply #'split-sequence:split-sequence delimiter sequence args))
@@ -1614,8 +1613,7 @@ of which has elements that satisfy PRED, the second which do not."
 ;; This function allows remove-empty-subseqs to have a default value while still
 ;; using compiler macros and the apply sexp in split-if.
 (defun cl21-split-sequence-if (delimiter sequence &rest args &key start end from-end count (remove-empty-subseqs t res-supplied-p) test key)
-  (declare (ignorable start end from-end count remove-empty-subseqs test key)
-           (inline split-sequence:split-sequence-if))
+  (declare (ignorable start end from-end count remove-empty-subseqs test key))
   (when (not res-supplied-p)
     (setq args (list* :remove-empty-subseqs remove-empty-subseqs args)))
   (apply #'split-sequence:split-sequence-if delimiter sequence args))
