@@ -110,16 +110,16 @@
     (flet ((add-arg (n)
              (setf (aref args (1- n)) 1)))
       (let ((form
-              (maptree (lambda (x)
-                         (case x
-                           (%
-                            (add-arg 1)
-                            (setf %-used t))
-                           ((%1 %2 %3 %4 %5)
-                            (add-arg
-                             (parse-integer (subseq (string x) 1)))))
-                         x)
-                       form))
+             (maptree (lambda (x)
+                        (case x
+                          (%
+                           (add-arg 1)
+                           (setf %-used t))
+                          ((%1 %2 %3 %4 %5)
+                           (add-arg
+                            (parse-integer (subseq (string x) 1)))))
+                        x)
+                      form))
             (lambda-list '())
             (ignored-args '()))
         (dotimes (i (1+ (or (position 1 args :from-end t)
@@ -148,13 +148,13 @@
                    (special-char-p char))))
       (with-output-to-string (s)
         (loop for char = (peek-char nil stream nil nil)
-              while (and (not (null char))
-                         (last-char-p char))
-              do (write-char (read-char stream) s))
+           while (and (not (null char))
+                      (last-char-p char))
+           do (write-char (read-char stream) s))
         (loop for char = (peek-char nil stream nil nil)
-              until (or (null char)
-                        (last-char-p char))
-              do (write-char (read-char stream) s)))))
+           until (or (null char)
+                     (last-char-p char))
+           do (write-char (read-char stream) s)))))
 
   (defun read-symbol (stream char)
     (unread-char char stream)
@@ -193,24 +193,29 @@
                (if (< 1
                       (count (car p) pairs :key #'car))
                    (return t)))))
-      (if (oddp (length contents))
-          (error "Odd number of values in hash-table literal")
-          (if (repeated-keys-p (subdivide contents 2))
-              (error "Repeated keys in hash-table literal")
-              (let ((hash (gensym "HASH")))
-                `(let ((,hash (make-hash-table :test 'equal)))
-                   (setf ,@(do ((lst contents
-                                     (cddr lst))
-                                (acc nil))
-                               ((null lst) (nreverse acc))
-                             (push `(gethash ,(car lst) ,hash) acc)
-                             (push (cadr lst) acc)))
-                   ,hash))))))
+      (let ((test 'equal))
+        ;; When the number of elements is odd, the first one must be a test
+        ;; function.
+        (when (oddp (length contents))
+          (setq test (car contents)
+                contents (cdr contents))
+          (when (not (member test '(eq eql equal equalp)))
+            (error "Invalid test function ~s in hash-table literal" test)))
+        (if (repeated-keys-p (subdivide contents 2))
+            (error "Repeated keys in hash-table literal")
+            (let ((hash (gensym "HASH")))
+              `(let ((,hash (make-hash-table :test ',test)))
+                 (setf ,@(do ((lst contents
+                                   (cddr lst))
+                              (acc nil))
+                             ((null lst) (nreverse acc))
+                           (push `(gethash ,(car lst) ,hash) acc)
+                           (push (cadr lst) acc)))
+                 ,hash))))))
 
   (defun hash-table-reader (stream sub-char numarg)
     (declare (ignore sub-char numarg))
-    (read-char stream)
-    `(equal-hash-table ,@(read-delimited-list #\) stream t))))
+    `(equal-hash-table ,@(read-delimited-list #\} stream t))))
 
 
 ;;
@@ -220,7 +225,7 @@
                    (:predicate syntaxp))
   (name nil :type symbol)
   (rules nil :type (and list
-                       (satisfies syntax-rule-list-p))))
+                        (satisfies syntax-rule-list-p))))
 
 (defun syntax-rule-p (rule)
   (and (listp rule)
@@ -286,19 +291,22 @@
     (:merge #+ccl :current
             #-ccl :standard)
     (:macro-char #\" #'string-reader)
+    (:macro-char #\} (get-macro-character #\)))
     (:dispatch-macro-char #\# #\" #'string-interpol-reader)
     (:dispatch-macro-char #\# #\' #'function-reader)
     (:macro-char #\^ #'lambda-reader)
     (:dispatch-macro-char #\# #\( #'vector-reader)
-    (:dispatch-macro-char #\# #\H #'hash-table-reader)))
+    ;; (:dispatch-macro-char #\# #\H #'hash-table-reader)
+    (:dispatch-macro-char #\# #\{ #'hash-table-reader)))
 
 (defsyntax :cl21
+  (#\} (get-macro-character #\)))
   (#\" #'string-reader)
   ((#\# #\") #'string-interpol-reader)
   ((#\# #\') #'function-reader)
   (#\^ #'lambda-reader)
   ((#\# #\() #'vector-reader)
-  ((#\# #\H) #'hash-table-reader))
+  ((#\# #\{) #'hash-table-reader))
 
 #.`(defreadtable cl21-package-local-nickname-syntax
      (:merge :standard)
