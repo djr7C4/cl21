@@ -1581,18 +1581,27 @@ of which has elements that satisfy PRED, the second which do not."
 ;; Function: split, split-if
 ;; Generic Function: abstract-split, abstract-split-if
 
+;; This function allows remove-empty-subseqs to have a default value while still
+;; using compiler macros and the apply sexp in split.
+(defun cl21-split-sequence (delimiter sequence &rest args &key start end from-end count (remove-empty-subseqs t res-supplied-p) test key)
+  (declare (ignorable start end from-end count remove-empty-subseqs test key)
+           (inline split-sequence:split-sequence))
+  (when (not res-supplied-p)
+    (setq args (list* :remove-empty-subseqs remove-empty-subseqs args)))
+  (apply #'split-sequence:split-sequence delimiter sequence args))
+
 (defun split (delimiter sequence &rest args &key start end from-end count remove-empty-subseqs test key)
   #.(or (documentation 'split-sequence:split-sequence 'function) "")
   (declare (ignore start end from-end count remove-empty-subseqs test key))
   (etypecase sequence
-    (cl:sequence (apply #'split-sequence:split-sequence delimiter sequence args))
+    (cl:sequence (apply #'cl21-split-sequence delimiter sequence args))
     (abstract-sequence (apply #'abstract-split delimiter sequence args))))
 (define-typecase-compiler-macro split (&whole form delimiter sequence &rest args)
   (typecase sequence
-    (cl:sequence `(split-sequence:split-sequence ,@(cdr form)))))
+    (cl:sequence `(cl21-split-sequence ,@(cdr form)))))
 
 (defgeneric abstract-split (delimiter sequence &key start end from-end count remove-empty-subseqs test key)
-  (:method (delimiter (sequence abstract-sequence) &rest args &key start end from-end count remove-empty-subseqs (test #'eql test-specified-p) (key #'identity))
+  (:method (delimiter (sequence abstract-sequence) &rest args &key start end from-end count (remove-empty-subseqs t) (test #'eql test-specified-p) (key #'identity))
     (declare (ignore start end from-end count remove-empty-subseqs))
     (when test-specified-p
       (setq args (delete-from-plist args :test)))
@@ -1602,18 +1611,27 @@ of which has elements that satisfy PRED, the second which do not."
            sequence
            args)))
 
-(defun split-if (pred sequence &rest args &key start end from-end count remove-empty-subseqs key)
+;; This function allows remove-empty-subseqs to have a default value while still
+;; using compiler macros and the apply sexp in split-if.
+(defun cl21-split-sequence-if (delimiter sequence &rest args &key start end from-end count (remove-empty-subseqs t res-supplied-p) test key)
+  (declare (ignorable start end from-end count remove-empty-subseqs test key)
+           (inline split-sequence:split-sequence-if))
+  (when (not res-supplied-p)
+    (setq args (list* :remove-empty-subseqs remove-empty-subseqs args)))
+  (apply #'split-sequence:split-sequence-if delimiter sequence args))
+
+(defun split-if (pred sequence &rest args &key start end from-end count (remove-empty-subseqs t) key)
   #.(or (documentation 'split-sequence:split-sequence-if 'function) "")
   (declare (ignore start end from-end count remove-empty-subseqs key))
   (etypecase sequence
-    (cl:sequence (apply #'split-sequence:split-sequence-if pred sequence args))
+    (cl:sequence (apply #'cl21-split-sequence-if pred sequence args))
     (abstract-sequence (apply #'abstract-split-if pred sequence args))))
 (define-typecase-compiler-macro split-if (&whole form pred sequence &rest args)
   (typecase sequence
-    (cl:sequence `(split-sequence:split-sequence-if ,@(cdr form)))))
+    (cl:sequence `(cl21-split-sequence-if ,@(cdr form)))))
 
 (defgeneric abstract-split-if (pred sequence &key start end from-end count remove-empty-subseqs key)
-  (:method (pred (sequence abstract-sequence) &key (start 0) end from-end count remove-empty-subseqs (key #'identity))
+  (:method (pred (sequence abstract-sequence) &key (start 0) end from-end count (remove-empty-subseqs t) (key #'identity))
     (let ((subseqs '())
           (buf '())
           (split-counts 0))
