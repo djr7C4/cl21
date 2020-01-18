@@ -14,6 +14,7 @@
                :cl-ppcre
                :split-sequence
                :alexandria
+               :rutils
                :repl-utilities
                #+sbcl :sb-cltl2
 
