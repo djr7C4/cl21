@@ -9,7 +9,13 @@
            :mvcall
            :mvlist
            :mvsetq
-           :mvprog1)
+           :mvprog1
+           :val0
+           :val1
+           :val2
+           :val3
+           :val4
+           :val5)
   (:documentation
    "This package contains a set of several shorthand nickname macros such as
 dbind for destructuring-bind, mvbind for multiple-value-bind"))
@@ -28,3 +34,27 @@ dbind for destructuring-bind, mvbind for multiple-value-bind"))
 (abbr mvbind multiple-value-bind)
 (abbr mvlist multiple-value-list)
 (abbr mvsetq multiple-value-setq)
+
+(defmacro val0 (form)
+  "Shorthand for (nth-value 0 form)"
+  `(nth-value 0 ,form))
+
+(defmacro val1 (form)
+  "Shorthand for (nth-value 1 form)"
+  `(nth-value 1 ,form))
+
+(defmacro val2 (form)
+  "Shorthand for (nth-value 2 form)"
+  `(nth-value 2 ,form))
+
+(defmacro val3 (form)
+  "Shorthand for (nth-value 2 form)"
+  `(nth-value 2 ,form))
+
+(defmacro val4 (form)
+  "Shorthand for (nth-value 2 form)"
+  `(nth-value 2 ,form))
+
+(defmacro val5 (form)
+  "Shorthand for (nth-value 2 form)"
+  `(nth-value 2 ,form))
